@@ -1,0 +1,29 @@
+Elsevier, 2026
+https://www.sciencedirect.com/science/article/abs/pii/S1364815225004128
+DOI: 10.1016/j.envsoft.2025.106728
+
+Elsevier, 2024
+https://www.sciencedirect.com/science/article/abs/pii/S0959652624020535
+DOI: 10.1016/j.jclepro.2024.142605
+
+Springer, 2025
+https://link.springer.com/article/10.1007/s11356-024-35764-8
+DOI: 10.1007/s11356-024-35764-8
+
+
+
+
+
+
+| Week | Main Work | Member 1 | Member 2 | Member 3 |
+|---|---|---|---|---|
+| Week 1 | Project understanding and domain study | Study carbon credits, emission forecasting, iron & steel sector | Study similar dashboards and UI ideas | Finalize project modules, architecture, tech stack |
+| Week 2 | Dataset searching and data study | Search Climate TRACE / iron-steel datasets, note columns | Prepare basic page flow: login, dashboard, prediction, reports | Select final dataset, understand target column, decide ML approach |
+| Week 3 | Data preprocessing start | Check missing values, duplicate values, column meanings | Create basic frontend layout and navigation | Build preprocessing pipeline: cleaning, encoding, feature selection |
+| Week 4 | Feature engineering and training data preparation | Prepare preprocessing notes and screenshots | Build auth pages and dashboard skeleton | Create lag features, rolling averages, temporal features, final training dataset |
+| Week 5 | Model training | Help compare metrics and prepare result table | Build prediction input form UI | Train BiLSTM model, save model, scaler, evaluate RMSE/MAE/R2 |
+| Week 6 | Backend core modules | Prepare API documentation draft | Connect frontend pages with dummy APIs | Build FastAPI backend, database models, JWT auth, prediction API |
+| Week 7 | Carbon credit and analytics module | Write carbon credit formula explanation | Build carbon credit page and charts UI | Implement carbon credit calculation, dashboard analytics APIs |
+| Week 8 | Reports and admin module | Prepare report content format | Build reports page, admin pages, tables | Implement PDF report generation, audit logs, admin APIs |
+| Week 9 | Full integration and testing | Test with sample data, note bugs | Test UI responsiveness and API flow | Fix integration bugs, validate model output, secure APIs |
+| Week 10 | Final report, PPT, demo | Write dataset/preprocessing section | Add screenshots, UI explanation, PPT design | Final demo setup, architecture explanation, model/backend explanation |

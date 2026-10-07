@@ -1,0 +1,44 @@
+============================================================
+               PREPROCESSING REPORT
+============================================================
+Original shape: 60039 rows, 43 columns
+Final shape:    60039 rows, 27 columns
+Unique facility count (source_id): 953
+Date range:     2021-01-01 00:00:00 to 2026-03-01 00:00:00
+------------------------------------------------------------
+Columns dropped with >30% missing values: []
+------------------------------------------------------------
+Missing Value Statistics (Before Imputation):
+  - source_id: 0 missing value(s)
+  - iso3_country: 0 missing value(s)
+  - source_type: 0 missing value(s)
+  - sector: 0 missing value(s)
+  - subsector: 0 missing value(s)
+  - start_time: 0 missing value(s)
+  - gas: 0 missing value(s)
+  - activity: 0 missing value(s)
+  - activity_units: 0 missing value(s)
+  - emissions_factor: 0 missing value(s)
+  - emissions_factor_units: 0 missing value(s)
+  - capacity: 0 missing value(s)
+  - capacity_units: 0 missing value(s)
+  - capacity_factor: 0 missing value(s)
+  - lat: 0 missing value(s)
+  - lon: 0 missing value(s)
+  - emissions_quantity: 0 missing value(s)
+------------------------------------------------------------
+Target emissions_quantity Transformation:
+  - Original Skewness: 3.1458
+  - Applied log1p Transformation: True
+  - Final Skewness: -1.6593
+------------------------------------------------------------
+Summary Statistics of emissions_quantity (Target):
+  - count: 60039.0000
+  - mean: 10.0627
+  - std: 3.2955
+  - min: 0.0000
+  - 25%: 8.7539
+  - 50%: 10.3708
+  - 75%: 12.4935
+  - max: 15.0747
+============================================================
