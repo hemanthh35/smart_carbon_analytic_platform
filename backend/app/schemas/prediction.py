@@ -21,6 +21,10 @@ class SimplePredictionInput(BaseModel):
     subsector: str | None = Field(None, description="Subsector")
     gas: str | None = Field(None, description="Gas type")
     baseline_emission: float | None = Field(None, description="Baseline emission for credit calc")
+    source_id: int | None = Field(
+        None, description="Facility source_id — used to look up its real emission history "
+                           "(lags/rolling means) instead of dataset-wide defaults"
+    )
 
 
 class FullPredictionInput(BaseModel):

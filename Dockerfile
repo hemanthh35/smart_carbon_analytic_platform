@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./
 COPY datasets/ /app/datasets/
+COPY preprocess/ /app/preprocess/
 COPY --from=frontend-build /build/frontend/dist /app/frontend/dist
 
 RUN mkdir -p /var/data /app/backend/reports /app/backend/uploads /app/backend/logs

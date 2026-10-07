@@ -442,10 +442,14 @@ export const PredictionPage: React.FC = () => {
     setReportResult(null);
 
     try {
+      const hasRealFacility = values.facility_select && values.facility_select !== '__manual__';
       const payload = {
         ...values,
         facility_name: values.facility_select === '__manual__' ? values.custom_facility_name : values.facility_name,
         baseline_emission: values.baseline_emission || null,
+        // Lets the backend look up this facility's real emission history (lags/rolling means)
+        // instead of falling back to dataset-wide median defaults.
+        source_id: hasRealFacility ? parseInt(values.facility_select, 10) : null,
       };
 
       // 1. Trigger simple prediction API

@@ -27,7 +27,14 @@ async def predict_simple(
     Returns predicted emission in original t CO₂ scale.
     """
     features = dict(FEATURE_DEFAULTS)
-    
+
+    # Replace dataset-wide median defaults with this facility's REAL historical context
+    # (lags, rolling means, emissions_factor, units, next period) when a facility was selected.
+    if payload.source_id is not None:
+        history = dataset_service.get_facility_history(payload.source_id)
+        if history:
+            features.update(history)
+
     # Dynamic Label Encoding from dataset_service alphabetical sorted lists
     if payload.iso3_country:
         unique_countries = [c["code"] for c in dataset_service.get_countries()]

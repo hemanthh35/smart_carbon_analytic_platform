@@ -150,4 +150,69 @@ class DatasetService:
     def get_gases(self) -> List[str]:
         return self._gases
 
+    def _load_history(self):
+        """Lazily load the preprocessed per-facility time series (lags/rolling means already
+        computed by preprocess.py) so real historical context can be looked up per facility."""
+        if getattr(self, "_history_df", None) is not None:
+            return
+
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        candidates = [
+            os.path.abspath(os.path.join(base_dir, "../../../preprocess/iron_steel_preprocessed.csv")),
+            os.path.abspath(os.path.join(base_dir, "../../preprocess/iron_steel_preprocessed.csv")),
+        ]
+        path = next((p for p in candidates if os.path.exists(p)), None)
+        if not path:
+            logger.warning("iron_steel_preprocessed.csv not found; facility history lookup disabled.")
+            self._history_df = pd.DataFrame()
+            return
+
+        logger.info(f"Loading preprocessed facility history from: {path}")
+        df = pd.read_csv(path)
+        df = df.sort_values(by=["source_id", "year", "month"])
+        self._history_df = df
+
+    def get_facility_history(self, source_id: int) -> Dict[str, Any] | None:
+        """
+        Return the most recent known feature row for a facility (its real emission_lag_*,
+        rolling_mean_*, emissions_factor, units, and last observed year/month/quarter),
+        advanced by one month so the lookup represents "context for forecasting the next
+        period" rather than re-stating an already-known period.
+
+        Returns None if the facility has no history available (caller should fall back to
+        dataset-wide defaults).
+        """
+        self._load_history()
+        if self._history_df.empty:
+            return None
+
+        rows = self._history_df[self._history_df["source_id"] == source_id]
+        if rows.empty:
+            return None
+
+        last = rows.iloc[-1]
+        month = int(last["month"]) + 1
+        year = int(last["year"])
+        if month > 12:
+            month = 1
+            year += 1
+        quarter = (month - 1) // 3 + 1
+
+        return {
+            "activity_units": int(last["activity_units"]),
+            "emissions_factor": float(last["emissions_factor"]),
+            "emissions_factor_units": int(last["emissions_factor_units"]),
+            "capacity_units": int(last["capacity_units"]),
+            "year": year,
+            "month": month,
+            "quarter": quarter,
+            "emission_lag_1": float(last["emission_lag_1"]),
+            "emission_lag_3": float(last["emission_lag_3"]),
+            "emission_lag_6": float(last["emission_lag_6"]),
+            "emission_lag_12": float(last["emission_lag_12"]),
+            "rolling_mean_3": float(last["rolling_mean_3"]),
+            "rolling_mean_6": float(last["rolling_mean_6"]),
+            "rolling_mean_12": float(last["rolling_mean_12"]),
+        }
+
 dataset_service = DatasetService()
