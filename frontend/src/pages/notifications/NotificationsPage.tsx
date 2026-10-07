@@ -1,178 +1,124 @@
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../app/store/store';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { formatDate } from '../../utils/helpers';
 import {
-  Bell,
-  CheckCheck,
-  Trash2,
-  Check,
-  Info,
-  CheckCircle,
   AlertTriangle,
+  Bell,
+  Check,
+  CheckCheck,
+  CheckCircle,
+  Info,
+  ShieldCheck,
+  Trash2,
   XCircle,
 } from 'lucide-react';
 import {
-  markNotificationRead,
-  markAllNotificationsRead,
-  deleteNotification,
   clearNotifications,
+  deleteNotification,
+  markAllNotificationsRead,
+  markNotificationRead,
 } from '../../app/store/uiSlice';
+
+type NotificationFilter = 'all' | 'unread' | 'read';
+
+const typeMeta = {
+  success: { label: 'System', icon: CheckCircle, tone: 'success' },
+  warning: { label: 'Attention', icon: AlertTriangle, tone: 'warning' },
+  error: { label: 'Critical', icon: XCircle, tone: 'error' },
+  info: { label: 'Update', icon: Info, tone: 'info' },
+} as const;
 
 export const NotificationsPage: React.FC = () => {
   const dispatch = useDispatch();
   const { notifications } = useSelector((state: RootState) => state.ui);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [filter, setFilter] = useState<NotificationFilter>('all');
 
-  const filteredNotifs = notifications.filter((n) => {
-    if (filter === 'unread') return !n.read;
-    if (filter === 'read') return n.read;
-    return true;
-  });
-
-  const getIcon = (type: string) => {
-    const classes = 'w-5 h-5 shrink-0';
-    switch (type) {
-      case 'success':
-        return <CheckCircle className={`${classes} text-emerald-500`} />;
-      case 'warning':
-        return <AlertTriangle className={`${classes} text-amber-500`} />;
-      case 'error':
-        return <XCircle className={`${classes} text-red-500`} />;
-      default:
-        return <Info className={`${classes} text-blue-500`} />;
-    }
-  };
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const readCount = notifications.length - unreadCount;
+  const filteredNotifications = useMemo(
+    () => notifications.filter((notification) => filter === 'all' || (filter === 'unread' ? !notification.read : notification.read)),
+    [filter, notifications]
+  );
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto text-left animate-fade-in duration-200">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="notifications-page animate-fade-in duration-200">
+      <div className="notifications-page__header">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-dark-900 dark:text-white leading-none">
-            System Alerts
-          </h1>
-          <p className="text-xs text-dark-500 dark:text-dark-400 mt-1">
-            Track status updates, model loadings, and compliance report configurations.
-          </p>
+          <div className="notifications-page__eyebrow"><span className="notifications-page__eyebrow-dot" /> System inbox</div>
+          <h2>Notifications</h2>
+          <p>Keep track of model activity, compliance updates, and workspace events.</p>
         </div>
-        
         {notifications.length > 0 && (
-          <div className="flex items-center gap-2 select-none self-start sm:self-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => dispatch(markAllNotificationsRead())}
-              className="flex items-center gap-1.5 text-xs"
-            >
-              <CheckCheck className="w-4 h-4" />
-              <span>Mark all read</span>
+          <div className="notifications-page__actions">
+            <Button variant="outline" size="sm" onClick={() => dispatch(markAllNotificationsRead())} className="gap-2">
+              <CheckCheck className="h-3.5 w-3.5" /> Mark all read
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => dispatch(clearNotifications())}
-              className="flex items-center gap-1.5 text-xs text-danger hover:bg-danger/10 hover:text-danger"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Clear all</span>
+            <Button variant="ghost" size="sm" onClick={() => dispatch(clearNotifications())} className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/20">
+              <Trash2 className="h-3.5 w-3.5" /> Clear all
             </Button>
           </div>
         )}
       </div>
 
-      {/* Filter Options */}
-      <div className="flex gap-2 border-b border-dark-200 dark:border-dark-800 pb-1 select-none">
-        {(['all', 'unread', 'read'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setFilter(t)}
-            className={`px-4 py-2 text-xs font-bold border-b-2 capitalize transition-all focus:outline-none ${
-              filter === t
-                ? 'border-primary-500 text-dark-900 dark:text-white'
-                : 'border-transparent text-dark-400 dark:text-dark-500 hover:text-dark-800'
-            }`}
-          >
-            {t} Alerts ({notifications.filter((n) => (t === 'unread' ? !n.read : t === 'read' ? n.read : true)).length})
-          </button>
-        ))}
-      </div>
+      <div className="notifications-page__layout">
+        <aside className="notifications-page__rail">
+          <div className="notifications-summary notifications-summary--unread">
+            <div className="notifications-summary__top"><span>Needs attention</span><span className="notifications-summary__icon"><Bell className="h-4 w-4" /></span></div>
+            <strong>{unreadCount.toString().padStart(2, '0')}</strong>
+            <p>Unread updates waiting for review</p>
+          </div>
+          <div className="notifications-summary">
+            <div className="notifications-summary__top"><span>Total activity</span><span className="notifications-summary__icon"><ShieldCheck className="h-4 w-4" /></span></div>
+            <strong>{notifications.length.toString().padStart(2, '0')}</strong>
+            <p>{readCount} already reviewed in this workspace</p>
+          </div>
+          <div className="notifications-page__note"><span className="notifications-page__note-mark">i</span><div><strong>Stay in the loop</strong><p>Important system and compliance events appear here automatically.</p></div></div>
+        </aside>
 
-      {/* Alerts Box */}
-      <div className="space-y-3">
-        {filteredNotifs.length === 0 ? (
-          <EmptyState
-            title="No alerts found"
-            description={
-              filter === 'unread'
-                ? "You've read all compliance updates! Excellent work."
-                : 'Your notification center is completely clear.'
-            }
-            icon={<Bell className="w-10 h-10 text-dark-400" />}
-          />
-        ) : (
-          filteredNotifs.map((n) => (
-            <Card
-              key={n.id}
-              className={`transition-all border-l-4 ${
-                n.read
-                  ? 'border-l-dark-300 dark:border-l-dark-750 opacity-75'
-                  : n.type === 'success'
-                  ? 'border-l-emerald-500 bg-emerald-50/15 dark:bg-emerald-950/5'
-                  : n.type === 'warning'
-                  ? 'border-l-amber-500 bg-amber-50/15 dark:bg-amber-950/5'
-                  : n.type === 'error'
-                  ? 'border-l-red-500 bg-red-50/15 dark:bg-red-950/5'
-                  : 'border-l-blue-500 bg-blue-50/15 dark:bg-blue-950/5'
-              }`}
-            >
-              <CardContent className="p-4 flex gap-4 items-start justify-between">
-                <div className="flex gap-3 items-start overflow-hidden">
-                  {getIcon(n.type)}
-                  <div className="space-y-1">
-                    <p className={`text-sm font-semibold leading-tight ${n.read ? 'text-dark-800 dark:text-dark-300' : 'text-dark-900 dark:text-white'}`}>
-                      {n.title}
-                    </p>
-                    <p className="text-xs text-dark-500 dark:text-dark-400 leading-normal">
-                      {n.message}
-                    </p>
-                    <span className="block text-[10px] text-dark-400">
-                      {formatDate(n.timestamp, true)}
-                    </span>
-                  </div>
-                </div>
+        <section className="notifications-page__stream" aria-label="Notification list">
+          <div className="notifications-tabs" role="tablist" aria-label="Notification filters">
+            {([
+              ['all', 'All activity', notifications.length],
+              ['unread', 'Unread', unreadCount],
+              ['read', 'Reviewed', readCount],
+            ] as const).map(([value, label, count]) => (
+              <button key={value} role="tab" aria-selected={filter === value} onClick={() => setFilter(value)} className={filter === value ? 'is-active' : ''}>
+                {label}<span>{count}</span>
+              </button>
+            ))}
+          </div>
 
-                <div className="flex gap-1.5 shrink-0 select-none">
-                  {!n.read && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => dispatch(markNotificationRead(n.id))}
-                      className="h-8 w-8 p-0"
-                      title="Mark as read"
-                    >
-                      <Check className="w-4 h-4 text-dark-500" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => dispatch(deleteNotification(n.id))}
-                    className="h-8 w-8 p-0 hover:bg-danger/10 hover:text-danger hover:border-danger/20"
-                    title="Delete notification"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+          <div className="notifications-list">
+            {filteredNotifications.length === 0 ? (
+              <div className="notifications-page__empty"><EmptyState title="Nothing here yet" description={filter === 'unread' ? 'You are fully caught up on workspace updates.' : 'Your notification stream is clear.'} icon={<Bell className="h-8 w-8 text-dark-400" />} /></div>
+            ) : (
+              filteredNotifications.map((notification) => {
+                const meta = typeMeta[notification.type];
+                const Icon = meta.icon;
+                return (
+                  <article key={notification.id} className={`notification-item notification-item--${meta.tone} ${notification.read ? 'is-read' : 'is-unread'}`}>
+                    <div className="notification-item__status"><Icon className="h-[17px] w-[17px]" /></div>
+                    <div className="notification-item__body">
+                      <div className="notification-item__meta"><span className="notification-item__label">{meta.label}</span><span className="notification-item__time">{formatDate(notification.timestamp, true)}</span>{!notification.read && <span className="notification-item__new">New</span>}</div>
+                      <h3>{notification.title}</h3>
+                      <p>{notification.message}</p>
+                    </div>
+                    <div className="notification-item__actions">
+                      {!notification.read && <button onClick={() => dispatch(markNotificationRead(notification.id))} title="Mark as read" aria-label={`Mark ${notification.title} as read`}><Check className="h-4 w-4" /></button>}
+                      <button onClick={() => dispatch(deleteNotification(notification.id))} title="Delete notification" aria-label={`Delete ${notification.title}`}><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
 };
+
 export default NotificationsPage;
