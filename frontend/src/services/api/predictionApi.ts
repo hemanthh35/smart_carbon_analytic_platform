@@ -66,6 +66,33 @@ export const predictionApi = {
     return response.data;
   },
 
+  getFacilityFeaturePreview: async (sourceId: number): Promise<{
+    source_id: number;
+    used_facility_history: boolean;
+    derived: {
+      emission_lag_1: number;
+      emission_lag_3: number;
+      emission_lag_6: number;
+      emission_lag_12: number;
+      rolling_mean_3: number;
+      rolling_mean_6: number;
+      rolling_mean_12: number;
+      emissions_factor: number;
+      year: number;
+      month: number;
+      quarter: number;
+    };
+    constants: {
+      gas: string;
+      activity_units: string;
+      emissions_factor_units: string;
+      capacity_units: string;
+    };
+  }> => {
+    const response = await axiosInstance.get(`/prediction/facility/${sourceId}/features`);
+    return response.data;
+  },
+
   getPublicStats: async (): Promise<{
     total_facilities: number;
     total_countries: number;

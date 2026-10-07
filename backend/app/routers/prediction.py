@@ -9,10 +9,54 @@ from app.models.prediction import Prediction
 from app.schemas.prediction import FullPredictionInput, PredictionOut, SimplePredictionInput
 from app.services.prediction_service import run_prediction
 from app.services.dataset_service import dataset_service
-from app.utils.constants import FEATURE_DEFAULTS
+from app.utils.constants import FEATURE_DEFAULTS, CONSTANT_FIELD_LABELS
 from app.utils.helpers import get_client_ip
 
 router = APIRouter(prefix="/api", tags=["Prediction"])
+
+
+@router.get("/prediction/facility/{source_id}/features")
+async def get_facility_feature_preview(
+    source_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Full 24-feature preview for a facility, used by the UI to show every value the model
+    will actually receive — including the 14 fields that are auto-derived rather than
+    typed by the user (facility history + dataset-wide constants).
+    """
+    history = dataset_service.get_facility_history(source_id)
+    used_fallback = history is None
+    if history is None:
+        # No history on file for this facility — fall back to dataset-wide defaults,
+        # clearly flagged so the UI can tell the user these aren't facility-specific.
+        history = {k: v for k, v in FEATURE_DEFAULTS.items() if k not in (
+            "iso3_country", "source_type", "sector", "subsector", "gas", "activity"
+        )}
+
+    return {
+        "source_id": source_id,
+        "used_facility_history": not used_fallback,
+        "derived": {
+            "emission_lag_1": history["emission_lag_1"],
+            "emission_lag_3": history["emission_lag_3"],
+            "emission_lag_6": history["emission_lag_6"],
+            "emission_lag_12": history["emission_lag_12"],
+            "rolling_mean_3": history["rolling_mean_3"],
+            "rolling_mean_6": history["rolling_mean_6"],
+            "rolling_mean_12": history["rolling_mean_12"],
+            "emissions_factor": history["emissions_factor"],
+            "year": history["year"],
+            "month": history["month"],
+            "quarter": history["quarter"],
+        },
+        "constants": {
+            "gas": CONSTANT_FIELD_LABELS["gas"],
+            "activity_units": CONSTANT_FIELD_LABELS["activity_units"],
+            "emissions_factor_units": CONSTANT_FIELD_LABELS["emissions_factor_units"],
+            "capacity_units": CONSTANT_FIELD_LABELS["capacity_units"],
+        },
+    }
 
 
 @router.post("/predict", response_model=PredictionOut, status_code=status.HTTP_201_CREATED)
@@ -60,7 +104,10 @@ async def predict_simple(
     features["gas"] = 0
 
     features.update({
-        "activity": payload.activity,
+        # The model was trained on 'activity' as a label-encoded category index (0-45205), not raw
+        # tonnage — raw tonnage here would overflow the scaler's trained range and blow up the
+        # prediction (e.g. "800,000,000,000k"). encode_activity() maps it into the valid range.
+        "activity": dataset_service.encode_activity(payload.activity),
         "capacity": payload.capacity,
         "capacity_factor": payload.capacity_factor,
         "lat": payload.lat,

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 from typing import List, Dict, Any
 from app.utils.logger import get_logger
@@ -67,15 +68,24 @@ class DatasetService:
             self._sectors = []
             self._subsectors = []
             self._gases = ["CO2", "CH4", "N2O"]
+            self._activity_sorted = np.array([])
             self._initialized = True
             return
-            
+
         try:
             logger.info(f"Loading CSV data from: {csv_path}")
             df = pd.read_csv(
-                csv_path, 
-                usecols=['source_id', 'source_name', 'iso3_country', 'source_type', 'sector', 'subsector', 'gas', 'lat', 'lon']
+                csv_path,
+                usecols=['source_id', 'source_name', 'iso3_country', 'source_type', 'sector', 'subsector', 'gas', 'lat', 'lon', 'activity']
             )
+
+            # The trained model's 'activity' feature is a LabelEncoder category index (0..45205),
+            # not raw tonnage — preprocess.py mistakenly label-encoded a continuous value. We can't
+            # recover the exact (string-sorted) training encoder, so we approximate it with a
+            # numeric-rank lookup: sort all historical raw activity values and map a new value to
+            # its rank position, clipped to the range the scaler was actually trained on. This keeps
+            # live inputs inside the distribution the model saw instead of exploding the MinMaxScaler.
+            self._activity_sorted = np.sort(df['activity'].dropna().unique())
             
             # Unique facilities (grouped by source_id)
             fac_df = df.groupby('source_id').first().reset_index()
@@ -125,7 +135,23 @@ class DatasetService:
             self._sectors = []
             self._subsectors = []
             self._gases = ["CO2", "CH4", "N2O"]
+            self._activity_sorted = np.array([])
             self._initialized = True
+
+    def encode_activity(self, raw_activity: float) -> int:
+        """
+        Map a raw tonnage value to the category-index range the model was actually trained on
+        (see the comment above where self._activity_sorted is built). Uses numeric rank position
+        instead of reproducing the training's string-sort LabelEncoder, which keeps the mapping
+        monotonic in tonnage and clips cleanly to the valid trained range instead of overflowing
+        the scaler for unseen/out-of-range tonnage values.
+        """
+        self.initialize()
+        if self._activity_sorted.size == 0:
+            return 0
+        rank = int(np.searchsorted(self._activity_sorted, raw_activity))
+        max_index = self._activity_sorted.size - 1
+        return max(0, min(rank, max_index))
 
     def get_facilities(self) -> List[Dict[str, Any]]:
         self.initialize()

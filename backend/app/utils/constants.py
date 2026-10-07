@@ -84,3 +84,12 @@ FEATURE_DEFAULTS = {
     "rolling_mean_6": 10.37,
     "rolling_mean_12": 10.37,
 }
+
+# Constant unit/gas labels — the dataset only ever records one value for each of these,
+# so they are correctly fixed (not placeholders) and shown read-only in the UI.
+CONSTANT_FIELD_LABELS = {
+    "gas": "co2e_100yr",
+    "activity_units": "t of steel",
+    "emissions_factor_units": "t of CO2e_100yr per t of steel",
+    "capacity_units": "t of steel",
+}

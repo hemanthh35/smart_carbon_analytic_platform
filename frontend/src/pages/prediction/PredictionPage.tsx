@@ -229,6 +229,33 @@ export const PredictionPage: React.FC = () => {
   const [selectedFacility, setSelectedFacility] = useState<any | null>(null);
   const [isAutofilled, setIsAutofilled] = useState(false);
 
+  // Auto-derived (locked) model features — the 14 of 24 model inputs the user never types.
+  // null = no real facility selected yet, so we show dataset-wide defaults (not facility-specific).
+  const [facilityFeatures, setFacilityFeatures] = useState<{
+    used_facility_history: boolean;
+    derived: {
+      emission_lag_1: number; emission_lag_3: number; emission_lag_6: number; emission_lag_12: number;
+      rolling_mean_3: number; rolling_mean_6: number; rolling_mean_12: number;
+      emissions_factor: number; year: number; month: number; quarter: number;
+    };
+  } | null>(null);
+  const [loadingFeaturePreview, setLoadingFeaturePreview] = useState(false);
+
+  // Mirrors backend FEATURE_DEFAULTS — shown only when no real facility is selected yet.
+  const DEFAULT_DERIVED = {
+    emission_lag_1: 10.37, emission_lag_3: 10.37, emission_lag_6: 10.37, emission_lag_12: 10.37,
+    rolling_mean_3: 10.37, rolling_mean_6: 10.37, rolling_mean_12: 10.37,
+    emissions_factor: 0.954, year: 2023, month: 6, quarter: 2,
+  };
+  // The dataset only ever records one value for each of these — genuinely constant, not faked.
+  const CONSTANT_FEATURES = {
+    gas: 'co2e_100yr',
+    activity_units: 't of steel',
+    emissions_factor_units: 't of CO2e_100yr per t of steel',
+    capacity_units: 't of steel',
+  };
+  const displayDerived = facilityFeatures?.derived || DEFAULT_DERIVED;
+
   // Prediction output states
   const [predictionResult, setPredictionResult] = useState<Prediction | null>(null);
   const [carbonCreditsResult, setCarbonCreditsResult] = useState<CarbonCredit | null>(null);
@@ -396,13 +423,14 @@ export const PredictionPage: React.FC = () => {
       setValue('subsector', '');
       setValue('lat', 0);
       setValue('lon', 0);
+      setFacilityFeatures(null);
       return;
     }
 
     if (selectedOption.value === '__manual__') {
       setSelectedFacility('__manual__');
       setIsAutofilled(false);
-      
+
       setValue('facility_select', '__manual__');
       setValue('facility_name', '__manual__');
       setValue('custom_facility_name', '');
@@ -413,6 +441,7 @@ export const PredictionPage: React.FC = () => {
       setValue('subsector', '');
       setValue('lat', 0);
       setValue('lon', 0);
+      setFacilityFeatures(null);
       return;
     }
 
@@ -431,6 +460,19 @@ export const PredictionPage: React.FC = () => {
     setValue('subsector', fac.subsector);
     setValue('lat', fac.lat);
     setValue('lon', fac.lon);
+
+    // Fetch this facility's REAL historical features (lags/rolling means/emissions_factor/period)
+    // so the locked "Auto-Derived" section shows actual data instead of dataset-wide defaults.
+    setFacilityFeatures(null);
+    setLoadingFeaturePreview(true);
+    predictionApi
+      .getFacilityFeaturePreview(fac.source_id)
+      .then((preview) => setFacilityFeatures(preview))
+      .catch((err) => {
+        console.error('Failed to load facility feature preview:', err);
+        setFacilityFeatures(null);
+      })
+      .finally(() => setLoadingFeaturePreview(false));
   };
 
   // Submit Handler
@@ -535,6 +577,7 @@ export const PredictionPage: React.FC = () => {
     });
     setSelectedFacility(null);
     setIsAutofilled(false);
+    setFacilityFeatures(null);
     setPredictionResult(null);
     setCarbonCreditsResult(null);
     setReportResult(null);
@@ -891,6 +934,47 @@ export const PredictionPage: React.FC = () => {
                       {...register('baseline_emission')}
                       disabled={isSubmitting}
                     />
+                  </div>
+                </div>
+
+                {/* 4. Auto-Derived Model Features (locked) — the other 14 of 24 numbers the
+                    BiLSTM actually receives, which the user never types directly. Shown read-only
+                    for transparency instead of being hidden/faked behind the scenes. */}
+                <div className="space-y-4 pt-4 border-t border-dark-100 dark:border-dark-800">
+                  <h3 className="text-xs font-bold text-dark-800 dark:text-dark-300 uppercase tracking-wider border-b border-dark-100 dark:border-dark-800 pb-1.5 flex items-center gap-1.5">
+                    <Gauge className="w-3.5 h-3.5 text-primary-500" />
+                    Auto-Derived Model Features (Locked)
+                  </h3>
+                  <p className="text-[11px] text-dark-500 dark:text-dark-400 -mt-2">
+                    {loadingFeaturePreview
+                      ? 'Loading facility history...'
+                      : facilityFeatures?.used_facility_history
+                        ? `Pulled from this facility's real emission history.`
+                        : 'No facility selected yet — showing dataset-wide defaults, not facility-specific values.'}
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Input label="Emission Lag (t-1)" value={displayDerived.emission_lag_1.toFixed(4)} disabled readOnly />
+                    <Input label="Emission Lag (t-3)" value={displayDerived.emission_lag_3.toFixed(4)} disabled readOnly />
+                    <Input label="Emission Lag (t-6)" value={displayDerived.emission_lag_6.toFixed(4)} disabled readOnly />
+                    <Input label="Emission Lag (t-12)" value={displayDerived.emission_lag_12.toFixed(4)} disabled readOnly />
+                    <Input label="Rolling Mean (3)" value={displayDerived.rolling_mean_3.toFixed(4)} disabled readOnly />
+                    <Input label="Rolling Mean (6)" value={displayDerived.rolling_mean_6.toFixed(4)} disabled readOnly />
+                    <Input label="Rolling Mean (12)" value={displayDerived.rolling_mean_12.toFixed(4)} disabled readOnly />
+                    <Input label="Emissions Factor" value={displayDerived.emissions_factor.toFixed(4)} disabled readOnly />
+                    <Input label="Year" value={displayDerived.year} disabled readOnly />
+                    <Input label="Month" value={displayDerived.month} disabled readOnly />
+                    <Input label="Quarter" value={displayDerived.quarter} disabled readOnly />
+                  </div>
+
+                  <p className="text-[11px] font-semibold text-dark-600 dark:text-dark-400 pt-2">
+                    Permanently fixed (only one value ever recorded in this dataset):
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Input label="Gas" value={CONSTANT_FEATURES.gas} disabled readOnly />
+                    <Input label="Activity Units" value={CONSTANT_FEATURES.activity_units} disabled readOnly />
+                    <Input label="Emissions Factor Units" value={CONSTANT_FEATURES.emissions_factor_units} disabled readOnly />
+                    <Input label="Capacity Units" value={CONSTANT_FEATURES.capacity_units} disabled readOnly />
                   </div>
                 </div>
 
