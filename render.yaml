@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: smart-carbon-analytics
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:////var/data/backend.db
+      - key: REPORTS_DIR
+        value: /var/data/reports
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+      - key: LOGS_DIR
+        value: /var/data/logs
+      - key: FRONTEND_DIST_DIR
+        value: /app/frontend/dist
+      - key: ALLOWED_ORIGINS
+        value: https://smart-carbon-analytics.onrender.com
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: smart-carbon-data
+      mountPath: /var/data
+      sizeGB: 1

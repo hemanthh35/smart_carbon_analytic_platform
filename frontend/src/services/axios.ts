@@ -2,7 +2,9 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { store } from '../app/store/store';
 import { logout, setCredentials } from '../app/store/authSlice';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Same-origin by default: FastAPI serves both the React app and /api in production.
+// Set VITE_API_URL only when intentionally running the frontend against a separate API.
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

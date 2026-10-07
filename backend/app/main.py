@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import os
 import time
+from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -110,6 +111,12 @@ app.include_router(dashboard.router)
 app.include_router(analytics.router)
 
 
+# ---------------------------------------------------------------------------
+# Monolith frontend serving
+# ---------------------------------------------------------------------------
+# In production the React build is copied next to the backend and FastAPI
+# serves it from the same origin. This keeps browser routes working on refresh
+# while all API routes remain under /api/*.
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])
 async def health_check():
@@ -129,3 +136,31 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal server error. Please try again later."},
     )
+
+
+# ---------------------------------------------------------------------------
+# Monolith frontend serving (registered after API and health routes)
+# ---------------------------------------------------------------------------
+# In production the React build is copied next to the backend and FastAPI
+# serves it from the same origin. This keeps browser routes working on refresh
+# while all API routes remain under /api/*.
+frontend_dist = Path(os.getenv(
+    "FRONTEND_DIST_DIR",
+    str(Path(__file__).resolve().parents[2] / "frontend" / "dist"),
+)).resolve()
+
+if frontend_dist.is_dir():
+    frontend_assets = frontend_dist / "assets"
+    if frontend_assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=frontend_assets), name="frontend-assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API endpoint not found")
+        requested_path = (frontend_dist / full_path).resolve()
+        if frontend_dist not in requested_path.parents and requested_path != frontend_dist:
+            raise HTTPException(status_code=404, detail="Not found")
+        if requested_path.is_file():
+            return FileResponse(requested_path)
+        return FileResponse(frontend_dist / "index.html")

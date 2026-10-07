@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./backend.db"
 
     # CORS
-    allowed_origins: str = "http://localhost:3000,http://localhost:8080"
+    allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8080"
 
     # Paths
     reports_dir: str = "reports"
