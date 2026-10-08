@@ -93,6 +93,16 @@ export const predictionApi = {
     return response.data;
   },
 
+  predictInsights: async (payload: Record<string, unknown>): Promise<{
+    predicted_emission: number;
+    top_features: { feature: string; shap_value: number }[] | null;
+    anomaly: { anomaly_score: number; is_anomalous: boolean } | null;
+    narrative: string | null;
+  }> => {
+    const response = await axiosInstance.post('/predict/insights', payload);
+    return response.data;
+  },
+
   getPublicStats: async (): Promise<{
     total_facilities: number;
     total_countries: number;

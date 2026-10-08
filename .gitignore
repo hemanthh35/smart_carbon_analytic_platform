@@ -72,3 +72,9 @@ desktop.ini
 
 # Keep an example env file if one is added later
 !.env.example
+
+# -----------------------------
+# Regenerated AI cache artifacts (auto-trained on first use, not source)
+# -----------------------------
+backend/app/ai/surrogate_rf.pkl
+backend/app/ai/anomaly_isoforest.pkl

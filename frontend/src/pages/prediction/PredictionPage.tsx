@@ -262,6 +262,16 @@ export const PredictionPage: React.FC = () => {
   const [reportResult, setReportResult] = useState<Report | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
+  // AI insight layer: SHAP feature attribution + anomaly check + local-LLM narrative
+  const [insights, setInsights] = useState<{
+    top_features: { feature: string; shap_value: number }[] | null;
+    anomaly: { anomaly_score: number; is_anomalous: boolean } | null;
+    narrative: string | null;
+  } | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [lastPayload, setLastPayload] = useState<Record<string, unknown> | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -493,6 +503,9 @@ export const PredictionPage: React.FC = () => {
         // instead of falling back to dataset-wide median defaults.
         source_id: hasRealFacility ? parseInt(values.facility_select, 10) : null,
       };
+      setLastPayload(payload);
+      setInsights(null);
+      setInsightsError(null);
 
       // 1. Trigger simple prediction API
       const result = await predictionApi.predictSimple(payload);
@@ -533,6 +546,24 @@ export const PredictionPage: React.FC = () => {
       setApiError('Failed to generate Jinja2 PDF compliance report.');
     } finally {
       setReportLoading(false);
+    }
+  };
+
+  // AI Insights: SHAP attribution + anomaly check + local-LLM narrative (Ollama llama3.2:3b).
+  // Slower than the main prediction (LLM generation can take ~20-30s), so it's a separate
+  // on-demand call rather than blocking the primary forecast.
+  const handleGenerateInsights = async () => {
+    if (!lastPayload) return;
+    try {
+      setInsightsLoading(true);
+      setInsightsError(null);
+      const result = await predictionApi.predictInsights(lastPayload);
+      setInsights(result);
+    } catch (err) {
+      console.error('Failed to generate AI insights:', err);
+      setInsightsError('AI insight layer unavailable (is Ollama running locally?).');
+    } finally {
+      setInsightsLoading(false);
     }
   };
 
@@ -581,6 +612,9 @@ export const PredictionPage: React.FC = () => {
     setPredictionResult(null);
     setCarbonCreditsResult(null);
     setReportResult(null);
+    setInsights(null);
+    setInsightsError(null);
+    setLastPayload(null);
   };
 
   // Render Skeleton Loader while loading dataset
@@ -1153,6 +1187,79 @@ export const PredictionPage: React.FC = () => {
                         Input characteristics align precisely with the model training dataset bounds. Model accuracy parameters: R²: 0.95, RMSE: 0.73.
                       </p>
                     </div>
+                  </div>
+
+                  {/* AI Insights: SHAP attribution + anomaly check + local LLM narrative */}
+                  <div className="pt-4 border-t border-dark-100 dark:border-dark-850 space-y-3">
+                    {!insights && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleGenerateInsights}
+                        disabled={insightsLoading || !lastPayload}
+                        className="w-full flex justify-center items-center gap-2 rounded-xl h-10 text-xs"
+                      >
+                        {insightsLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Running SHAP + anomaly check + local LLM (~20-30s)...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            <span>Generate AI Insights</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {insightsError && (
+                      <p className="text-[11px] font-medium text-danger text-center">{insightsError}</p>
+                    )}
+                    {insights && (
+                      <div className="space-y-3 text-left">
+                        {insights.anomaly && (
+                          <div
+                            className={`text-[11px] font-semibold px-3 py-2 rounded-lg ${
+                              insights.anomaly.is_anomalous
+                                ? 'bg-danger/10 text-danger'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            }`}
+                          >
+                            {insights.anomaly.is_anomalous
+                              ? '⚠ Flagged as statistically anomalous vs. historical facility reports'
+                              : '✓ Consistent with historical facility reporting patterns'}
+                            {' '}(score {insights.anomaly.anomaly_score.toFixed(3)})
+                          </div>
+                        )}
+                        {insights.top_features && insights.top_features.length > 0 && (
+                          <div>
+                            <span className="text-[10px] font-bold text-dark-600 dark:text-dark-400 uppercase tracking-wider block mb-1.5">
+                              Top Drivers (SHAP)
+                            </span>
+                            <div className="space-y-1">
+                              {insights.top_features.map((f) => (
+                                <div key={f.feature} className="flex items-center justify-between text-[11px]">
+                                  <span className="text-dark-600 dark:text-dark-400">{f.feature}</span>
+                                  <span className={f.shap_value >= 0 ? 'text-danger font-semibold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'}>
+                                    {f.shap_value >= 0 ? '+' : ''}{f.shap_value.toFixed(3)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {insights.narrative && (
+                          <div>
+                            <span className="text-[10px] font-bold text-dark-600 dark:text-dark-400 uppercase tracking-wider block mb-1.5">
+                              AI Summary (local llama3.2:3b)
+                            </span>
+                            <p className="text-[11px] text-dark-600 dark:text-dark-400 leading-relaxed italic">
+                              {insights.narrative}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Compliance PDF Action */}

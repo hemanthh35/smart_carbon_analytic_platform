@@ -20,3 +20,5 @@ tensorflow==2.16.1
 keras==3.10.0
 scikit-learn==1.6.1
 joblib
+shap==0.50.0
+requests

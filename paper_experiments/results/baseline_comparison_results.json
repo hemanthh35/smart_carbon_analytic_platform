@@ -1,0 +1,132 @@
+{
+  "dataset": {
+    "rows": 60039,
+    "facilities": 953
+  },
+  "random_split": {
+    "Linear Regression": {
+      "R2": 0.9510505682937991,
+      "RMSE": 0.7354184504953122,
+      "MAE": 0.3277240865638512
+    },
+    "Random Forest": {
+      "R2": 0.9992403730680705,
+      "RMSE": 0.09161379450432054,
+      "MAE": 0.03095369968916991,
+      "fit_time_s": 23.382283687591553
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "capacity_factor",
+      "importance": 0.6742260813575426
+    },
+    {
+      "feature": "rolling_mean_3",
+      "importance": 0.2039099752648443
+    },
+    {
+      "feature": "rolling_mean_6",
+      "importance": 0.054796716000457914
+    },
+    {
+      "feature": "emission_lag_1",
+      "importance": 0.02926060753182642
+    },
+    {
+      "feature": "rolling_mean_12",
+      "importance": 0.025347042052465324
+    },
+    {
+      "feature": "capacity",
+      "importance": 0.0040336248608190805
+    },
+    {
+      "feature": "emissions_factor",
+      "importance": 0.003903963218048761
+    },
+    {
+      "feature": "activity",
+      "importance": 0.0036625269808700477
+    },
+    {
+      "feature": "source_type",
+      "importance": 0.0001821859214238004
+    },
+    {
+      "feature": "emission_lag_3",
+      "importance": 0.0001313256053453942
+    },
+    {
+      "feature": "emission_lag_12",
+      "importance": 0.00012841983882386107
+    },
+    {
+      "feature": "lon",
+      "importance": 0.00012817537060685923
+    },
+    {
+      "feature": "emission_lag_6",
+      "importance": 9.45938617999284e-05
+    },
+    {
+      "feature": "lat",
+      "importance": 8.341180308495541e-05
+    },
+    {
+      "feature": "iso3_country",
+      "importance": 5.9603993128296463e-05
+    },
+    {
+      "feature": "year",
+      "importance": 2.7169290640134427e-05
+    },
+    {
+      "feature": "month",
+      "importance": 1.8993867707048604e-05
+    },
+    {
+      "feature": "quarter",
+      "importance": 5.583180565420626e-06
+    },
+    {
+      "feature": "sector",
+      "importance": 0.0
+    },
+    {
+      "feature": "subsector",
+      "importance": 0.0
+    },
+    {
+      "feature": "gas",
+      "importance": 0.0
+    },
+    {
+      "feature": "activity_units",
+      "importance": 0.0
+    },
+    {
+      "feature": "emissions_factor_units",
+      "importance": 0.0
+    },
+    {
+      "feature": "capacity_units",
+      "importance": 0.0
+    }
+  ],
+  "group_split": {
+    "train_facilities": 762,
+    "test_facilities": 191,
+    "facility_overlap": 0,
+    "Linear Regression": {
+      "R2": 0.9568061088413645,
+      "RMSE": 0.6901231235064373,
+      "MAE": 0.3334475587776278
+    },
+    "Random Forest": {
+      "R2": 0.9980512727219357,
+      "RMSE": 0.14658547770650335,
+      "MAE": 0.04957163413565702
+    }
+  }
+}

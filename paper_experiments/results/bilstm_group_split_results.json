@@ -1,0 +1,9 @@
+{
+  "train_facilities": 762,
+  "test_facilities": 191,
+  "facility_overlap": 0,
+  "epochs_trained": 20,
+  "R2": 0.9740279478394919,
+  "RMSE": 0.5351413965450332,
+  "MAE": 0.36772555349476677
+}

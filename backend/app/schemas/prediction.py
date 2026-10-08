@@ -58,6 +58,26 @@ class FullPredictionInput(BaseModel):
     baseline_emission: float | None = None
 
 
+class FeatureContribution(BaseModel):
+    feature: str
+    shap_value: float
+
+
+class AnomalyResult(BaseModel):
+    anomaly_score: float
+    is_anomalous: bool
+
+
+class PredictionInsights(BaseModel):
+    predicted_emission: float
+    top_features: list[FeatureContribution] | None = None
+    anomaly: AnomalyResult | None = None
+    narrative: str | None = Field(
+        None, description="AI-generated plain-English summary (local Ollama llama3.2:3b). "
+                           "None if Ollama was unreachable."
+    )
+
+
 class PredictionOut(BaseModel):
     model_config = {"from_attributes": True}
 
