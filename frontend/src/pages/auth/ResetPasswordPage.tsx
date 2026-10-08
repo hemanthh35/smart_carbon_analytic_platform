@@ -50,7 +50,7 @@ export const ResetPasswordPage: React.FC = () => {
       <Card className="border-none shadow-none bg-transparent">
         <CardContent className="space-y-6 p-0 text-center">
           <div className="flex justify-center">
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-full text-emerald-500 shadow-md">
+            <div className="p-4 bg-primary-50 dark:bg-primary-950/20 rounded-full text-primary-500 shadow-md">
               <CheckCircle2 className="w-12 h-12" />
             </div>
           </div>

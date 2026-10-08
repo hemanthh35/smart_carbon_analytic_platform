@@ -13,7 +13,7 @@ export const AuthLayout: React.FC = () => {
     <div className="min-h-screen bg-dark-50 font-sans text-dark-900">
       <div className="grid min-h-screen lg:grid-cols-[minmax(420px,.9fr)_1.1fr]">
         <aside className="relative hidden overflow-hidden bg-dark-900 p-10 text-dark-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(198,225,177,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(198,225,177,.15) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(177, 185, 225, .15) 1px, transparent 1px), linear-gradient(90deg, rgba(177, 185, 225, .15) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
           <div className="relative flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary-300 text-dark-900"><Leaf className="h-4 w-4" /></span>
             <span className="font-display text-lg font-bold tracking-tight">Pulse<span className="text-primary-300">Carbon</span></span>

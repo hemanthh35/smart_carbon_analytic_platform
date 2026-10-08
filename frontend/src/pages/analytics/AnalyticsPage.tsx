@@ -104,13 +104,13 @@ export const AnalyticsPage: React.FC = () => {
     {
       header: 'Credits Issued',
       accessorKey: 'credits',
-      cell: (row) => <span className="font-semibold text-emerald-600 dark:text-emerald-450">{formatNumber(row.credits)} credits</span>,
+      cell: (row) => <span className="font-semibold text-primary-600 dark:text-primary-400">{formatNumber(row.credits)} credits</span>,
       sortable: true,
     },
   ];
 
   const trendAreas: AreaConfig[] = [
-    { key: 'emissions', color: '#4ADE80', name: 'Emissions (t CO₂)' },
+    { key: 'emissions', color: '#8B7BFF', name: 'Emissions (t CO₂)' },
     { key: 'credits', color: '#38BDF8', name: 'Credits Issued' },
   ];
 

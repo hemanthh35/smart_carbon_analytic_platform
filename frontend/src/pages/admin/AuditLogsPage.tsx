@@ -88,7 +88,7 @@ export const AuditLogsPage: React.FC = () => {
             <CardTitle>System Activity Logs</CardTitle>
             <CardDescription>Immutable trail of access points, token updates, and model activations.</CardDescription>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-450 font-semibold select-none">
+          <div className="flex items-center gap-1.5 text-xs text-primary-600 dark:text-primary-400 font-semibold select-none">
             <ShieldCheck className="w-4.5 h-4.5" />
             <span>GDPR Compliant Logs</span>
           </div>

@@ -12,7 +12,7 @@ export interface DonutChartProps {
   height?: number;
 }
 
-const COLORS = ['#4ADE80', '#38BDF8', '#5EEAD4', '#C4B5FD', '#F59E0B', '#EF4444'];
+const COLORS = ['#8B7BFF', '#38BDF8', '#5EEAD4', '#C4B5FD', '#F59E0B', '#EF4444'];
 
 export const DonutChart: React.FC<DonutChartProps> = ({ data, height = 300 }) => {
   return (

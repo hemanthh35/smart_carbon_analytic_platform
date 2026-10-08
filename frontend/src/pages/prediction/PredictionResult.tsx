@@ -178,7 +178,7 @@ export const PredictionResult: React.FC = () => {
                       style={{ width: `${Math.max(5, Math.min(95, (prediction.predicted_emission / prediction.baseline_emission) * 100))}%` }}
                     ></div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-primary-600 dark:text-primary-400">
                     <Leaf className="w-4 h-4" />
                     <span>
                       {reductionPercent > 0
@@ -228,11 +228,11 @@ export const PredictionResult: React.FC = () => {
                   </Button>
                 ) : (
                   <div className="space-y-4 animate-in fade-in duration-300">
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950/15 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 text-center">
-                      <span className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                    <div className="p-4 bg-primary-50 dark:bg-primary-950/15 rounded-2xl border border-primary-100 dark:border-primary-900/30 text-center">
+                      <span className="block text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                         Incentive Credits Issued
                       </span>
-                      <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400 block mt-1 tracking-tight">
+                      <span className="text-3xl font-black text-primary-700 dark:text-primary-400 block mt-1 tracking-tight">
                         {formatNumber(carbonCredits.carbon_credits, 2)}
                       </span>
                       <span className="text-[10px] text-dark-500 dark:text-dark-400 block mt-2">

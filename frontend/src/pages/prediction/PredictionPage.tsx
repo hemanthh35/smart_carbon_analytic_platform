@@ -90,8 +90,8 @@ const PredictionMap: React.FC<PredictionMapProps> = ({
       const circle = L.circleMarker([f.lat, f.lon], {
         renderer: canvasRenderer,
         radius: 6,
-        color: '#16a34a',
-        fillColor: '#4ade80',
+        color: '#5D4BC7',
+        fillColor: '#8B7BFF',
         fillOpacity: 0.75,
         weight: 1,
       }).addTo(map);
@@ -104,7 +104,7 @@ const PredictionMap: React.FC<PredictionMapProps> = ({
           <p><strong>Source Type:</strong> ${f.source_type}</p>
           <p><strong>Sector:</strong> ${f.sector}</p>
           <p><strong>Subsector:</strong> ${f.subsector}</p>
-          <p class="text-[10px] text-green-600 font-bold mt-1">👉 Click circle to select facility</p>
+          <p class="text-[10px] text-primary-600 font-bold mt-1">👉 Click circle to select facility</p>
         </div>
       `;
       circle.bindPopup(popupContent);
@@ -340,31 +340,31 @@ export const PredictionPage: React.FC = () => {
   const customSelectStyles = {
     control: (base: any, state: any) => ({
       ...base,
-      backgroundColor: isDark ? '#0f172a' : '#ffffff',
-      borderColor: state.isFocused ? '#22c55e' : isDark ? '#1e293b' : '#e2e8f0',
+      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+      borderColor: state.isFocused ? '#7C6CFF' : isDark ? '#1E293B' : '#E2E8F0',
       borderRadius: '0.75rem',
       minHeight: '2.75rem',
-      color: isDark ? '#f8fafc' : '#0f172a',
-      boxShadow: state.isFocused ? '0 0 0 1px #22c55e' : 'none',
+      color: isDark ? '#F8FAFC' : '#0F172A',
+      boxShadow: state.isFocused ? '0 0 0 1px #7C6CFF' : 'none',
       transition: 'all 0.2s',
       opacity: state.isDisabled ? 0.6 : 1,
       cursor: state.isDisabled ? 'not-allowed' : 'default',
       '&:hover': {
-        borderColor: '#22c55e',
+        borderColor: '#7C6CFF',
       },
     }),
     singleValue: (base: any) => ({
       ...base,
-      color: isDark ? '#f8fafc' : '#0f172a',
+      color: isDark ? '#F8FAFC' : '#0F172A',
     }),
     input: (base: any) => ({
       ...base,
-      color: isDark ? '#f8fafc' : '#0f172a',
+      color: isDark ? '#F8FAFC' : '#0F172A',
     }),
     menu: (base: any) => ({
       ...base,
-      backgroundColor: isDark ? '#0f172a' : '#ffffff',
-      border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+      border: `1px solid ${isDark ? '#1E293B' : '#E2E8F0'}`,
       borderRadius: '0.75rem',
       overflow: 'hidden',
       zIndex: 50,
@@ -372,31 +372,31 @@ export const PredictionPage: React.FC = () => {
     option: (base: any, state: any) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? '#22c55e'
+        ? '#7C6CFF'
         : state.isFocused
         ? isDark
-          ? 'rgba(34, 197, 94, 0.15)'
-          : 'rgba(34, 197, 94, 0.08)'
+          ? 'rgba(34, 153, 197, 0.15)'
+          : 'rgba(34, 153, 197, 0.08)'
         : 'transparent',
       color: state.isSelected
-        ? '#ffffff'
+        ? '#FFFFFF'
         : state.isFocused
-        ? '#22c55e'
+        ? '#7C6CFF'
         : isDark
-        ? '#cbd5e1'
+        ? '#CBD5E1'
         : '#334155',
       cursor: 'pointer',
       padding: '0.5rem 1rem',
       fontSize: '0.875rem',
       transition: 'all 0.15s',
       '&:active': {
-        backgroundColor: '#22c55e',
-        color: '#ffffff',
+        backgroundColor: '#7C6CFF',
+        color: '#FFFFFF',
       },
     }),
     placeholder: (base: any) => ({
       ...base,
-      color: '#94a3b8',
+      color: '#94A3B8',
     }),
   };
 
@@ -1104,15 +1104,15 @@ export const PredictionPage: React.FC = () => {
                   </div>
 
                   {/* Metric 2: Carbon Credits Generated */}
-                  <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/15 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/30 flex items-center gap-4">
-                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <div className="p-4 bg-primary-50/50 dark:bg-primary-950/15 rounded-2xl border border-primary-100/50 dark:border-primary-900/30 flex items-center gap-4">
+                    <div className="p-3 bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-xl">
                       <Coins className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider block">
                         Carbon Offsets Issued
                       </span>
-                      <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300 block">
+                      <span className="text-2xl font-extrabold text-primary-700 dark:text-primary-300 block">
                         {carbonCreditsResult 
                           ? `${formatNumber(carbonCreditsResult.carbon_credits, 2)} Credits`
                           : '0.00 Credits'}
@@ -1139,7 +1139,7 @@ export const PredictionPage: React.FC = () => {
                         <span className="text-xs font-semibold text-dark-700 dark:text-dark-300">
                           {reductionAmount > 0 ? 'Emission Reduction:' : 'Emission Surplus:'}
                         </span>
-                        <span className={`text-xs font-bold ${reductionAmount > 0 ? 'text-emerald-600' : 'text-danger'}`}>
+                        <span className={`text-xs font-bold ${reductionAmount > 0 ? 'text-primary-600' : 'text-danger'}`}>
                           {formatNumber(Math.abs(reductionAmount), 2)} t CO₂e
                         </span>
                       </div>
@@ -1159,7 +1159,7 @@ export const PredictionPage: React.FC = () => {
                         <div className="flex items-center gap-1 mt-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             reductionPercent > 0 
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                              ? 'bg-primary-100 text-primary-800 dark:bg-primary-950/40 dark:text-primary-400' 
                               : 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400'
                           }`}>
                             {reductionPercent > 0 
@@ -1222,7 +1222,7 @@ export const PredictionPage: React.FC = () => {
                             className={`text-[11px] font-semibold px-3 py-2 rounded-lg ${
                               insights.anomaly.is_anomalous
                                 ? 'bg-danger/10 text-danger'
-                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
                             }`}
                           >
                             {insights.anomaly.is_anomalous
@@ -1240,7 +1240,7 @@ export const PredictionPage: React.FC = () => {
                               {insights.top_features.map((f) => (
                                 <div key={f.feature} className="flex items-center justify-between text-[11px]">
                                   <span className="text-dark-600 dark:text-dark-400">{f.feature}</span>
-                                  <span className={f.shap_value >= 0 ? 'text-danger font-semibold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'}>
+                                  <span className={f.shap_value >= 0 ? 'text-danger font-semibold' : 'text-primary-600 dark:text-primary-400 font-semibold'}>
                                     {f.shap_value >= 0 ? '+' : ''}{f.shap_value.toFixed(3)}
                                   </span>
                                 </div>
@@ -1284,7 +1284,7 @@ export const PredictionPage: React.FC = () => {
                       </Button>
                     ) : (
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 justify-center py-1">
+                        <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 justify-center py-1">
                           <CheckCircle2 className="w-4.5 h-4.5" />
                           <span className="text-xs font-semibold">Compliance PDF Generated</span>
                         </div>

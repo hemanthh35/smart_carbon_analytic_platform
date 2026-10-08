@@ -45,7 +45,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   const trendColor = trend
     ? trend.direction === 'up'
-      ? 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20'
+      ? 'text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-950/20'
       : trend.direction === 'down'
       ? 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/20'
       : 'text-dark-500 bg-dark-50 dark:text-dark-400 dark:bg-dark-900/40'

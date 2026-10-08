@@ -154,7 +154,7 @@ export const CarbonCreditsPage: React.FC = () => {
       header: 'Reduction (t)',
       accessorKey: 'reduction',
       cell: (row) => (
-        <span className={row.reduction > 0 ? 'text-emerald-600 font-semibold' : 'text-dark-500'}>
+        <span className={row.reduction > 0 ? 'text-primary-600 font-semibold' : 'text-dark-500'}>
           {formatNumber(row.reduction, 2)}
         </span>
       ),
@@ -164,7 +164,7 @@ export const CarbonCreditsPage: React.FC = () => {
       header: 'Credits Earned',
       accessorKey: 'carbon_credits',
       cell: (row) => (
-        <span className="text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-0.5 rounded-full">
+        <span className="text-primary-600 font-bold bg-primary-50 dark:bg-primary-950/20 px-2.5 py-0.5 rounded-full">
           +{formatNumber(row.carbon_credits, 2)}
         </span>
       ),
@@ -231,7 +231,7 @@ export const CarbonCreditsPage: React.FC = () => {
               size="sm"
               onClick={() => handleDirectCompute(row)}
               disabled={isSubmitting}
-              className="h-8 text-xs bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-1"
+              className="h-8 text-xs bg-primary-500 hover:bg-primary-600 text-white flex items-center gap-1"
             >
               {isSubmitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -336,7 +336,7 @@ export const CarbonCreditsPage: React.FC = () => {
         <Card className="relative overflow-hidden bg-gradient-to-br from-primary-400/5 via-white to-secondary-300/5 dark:from-primary-950/10 dark:via-dark-900 dark:to-dark-950/20 flex flex-col justify-between">
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5 text-base">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
+              <Sparkles className="w-4 h-4 text-primary-500" />
               <span>How offset computation works</span>
             </CardTitle>
             <CardDescription>Rules & formula details</CardDescription>
@@ -349,7 +349,7 @@ export const CarbonCreditsPage: React.FC = () => {
               <div className="font-semibold text-dark-800 dark:text-dark-250">
                 1 Credit = 1 Tonne of CO₂ prevented.
               </div>
-              <div className="font-mono text-2xs text-emerald-600 dark:text-emerald-400">
+              <div className="font-mono text-2xs text-primary-600 dark:text-primary-400">
                 Formula: max(0, Baseline - Prediction)
               </div>
             </div>
@@ -456,7 +456,7 @@ export const CarbonCreditsPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={dialogSubmitting} className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/10">
+            <Button type="submit" disabled={dialogSubmitting} className="bg-primary-500 hover:bg-primary-600 text-white shadow-primary-500/10">
               {dialogSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-1.5" />

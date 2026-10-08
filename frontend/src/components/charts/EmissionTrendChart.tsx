@@ -15,8 +15,8 @@ export const EmissionTrendChart: React.FC<EmissionTrendChartProps> = ({ data, he
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="emissionsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4ADE80" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#4ADE80" stopOpacity={0} />
+              <stop offset="5%" stopColor="#8B7BFF" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#8B7BFF" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-dark-800" />
@@ -50,7 +50,7 @@ export const EmissionTrendChart: React.FC<EmissionTrendChartProps> = ({ data, he
           <Area
             type="monotone"
             dataKey="emissions"
-            stroke="#4ADE80"
+            stroke="#8B7BFF"
             strokeWidth={2.5}
             fillOpacity={1}
             fill="url(#emissionsGrad)"

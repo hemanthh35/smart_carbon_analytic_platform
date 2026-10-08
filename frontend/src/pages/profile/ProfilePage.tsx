@@ -117,8 +117,8 @@ export const ProfilePage: React.FC = () => {
           </CardHeader>
           <CardContent>
             {success && (
-              <div className="mb-4 p-3.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl text-xs font-semibold text-emerald-600 dark:text-emerald-450 flex gap-2 items-center">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <div className="mb-4 p-3.5 bg-primary-50 dark:bg-primary-950/20 border border-primary-100 dark:border-primary-900/30 rounded-2xl text-xs font-semibold text-primary-600 dark:text-primary-400 flex gap-2 items-center">
+                <CheckCircle2 className="w-4 h-4 text-primary-500" />
                 <span>Profile details updated successfully.</span>
               </div>
             )}
