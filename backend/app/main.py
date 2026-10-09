@@ -1,6 +1,8 @@
 """FastAPI application entry point."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 import os
 import time
 from pathlib import Path
@@ -8,7 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -38,6 +40,12 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+# Keep the platform health check responsive while TensorFlow and the dataset
+# are loading during a cold start.
+app.state.startup_ready = False
+app.state.startup_error = None
+app.state.startup_task = None
 
 # ─── Rate Limiting Middleware ──────────────────────────────────────────────────
 app.state.limiter = limiter
@@ -84,20 +92,49 @@ os.makedirs("app/static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # ─── Startup: DB init + Model load ────────────────────────────────────────────
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Initializing database tables…")
+def _initialize_application_dependencies() -> None:
+    """Perform blocking initialization outside the event-loop thread."""
+    logger.info("Initializing database tables...")
     init_db()
-    logger.info("Loading BiLSTM model and scaler…")
+
+    logger.info("Loading BiLSTM model and scaler...")
     from app.ai.inference import inference_engine
     inference_engine.load(
         model_path=settings.model_path,
         scaler_path=settings.scaler_path,
     )
+
     logger.info("Loading Climate TRACE dataset...")
     from app.services.dataset_service import dataset_service
     dataset_service.initialize()
-    logger.info("🚀 Application startup complete.")
+
+
+async def _initialize_application() -> None:
+    """Load the model and dataset without delaying the health endpoint."""
+    try:
+        await asyncio.to_thread(_initialize_application_dependencies)
+    except Exception as exc:
+        app.state.startup_error = str(exc)
+        logger.exception("Application initialization failed: %s", exc)
+        return
+
+    app.state.startup_ready = True
+    logger.info("Application startup complete.")
+
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.startup_task = asyncio.create_task(_initialize_application())
+    logger.info("HTTP server ready; model and dataset loading in background.")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    task = app.state.startup_task
+    if task and not task.done():
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 # ─── Routers ─────────────────────────────────────────────────────────────────
@@ -118,14 +155,33 @@ app.include_router(analytics.router)
 # serves it from the same origin. This keeps browser routes working on refresh
 # while all API routes remain under /api/*.
 # ─── Health Check ─────────────────────────────────────────────────────────────
-@app.get("/health", tags=["Health"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["Health"])
 async def health_check():
     from app.ai.inference import inference_engine
+
+    if app.state.startup_error:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "ready": False,
+                "error": "Application initialization failed",
+                "model_loaded": inference_engine.is_loaded,
+            },
+        )
+
     return {
-        "status": "healthy",
+        "status": "healthy" if app.state.startup_ready else "starting",
+        "ready": app.state.startup_ready,
         "version": settings.app_version,
         "model_loaded": inference_engine.is_loaded,
     }
+
+
+@app.head("/", include_in_schema=False)
+async def root_head_check():
+    """Accept platform/prober HEAD checks against the site root."""
+    return Response(status_code=200)
 
 
 # ─── Global Error Handler ──────────────────────────────────────────────────────
