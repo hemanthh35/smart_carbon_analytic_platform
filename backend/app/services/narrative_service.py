@@ -12,13 +12,19 @@ from __future__ import annotations
 
 import requests
 
+from app.core.config import settings
 from app.utils.logger import get_logger
 
 logger = get_logger("services.narrative")
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3.2:3b"
-REQUEST_TIMEOUT_S = 30
+OLLAMA_API_KEY = settings.ollama_api_key.strip()
+OLLAMA_URL = settings.ollama_url or (
+    "https://ollama.com/api/chat" if OLLAMA_API_KEY else "http://localhost:11434/api/chat"
+)
+OLLAMA_MODEL = settings.ollama_model or (
+    "gpt-oss:20b" if OLLAMA_API_KEY else "llama3.2:3b"
+)
+REQUEST_TIMEOUT_S = settings.ollama_timeout_seconds
 
 
 def _build_prompt(
@@ -48,7 +54,7 @@ def _build_prompt(
             f"{f['feature']} ({'+' if f['shap_value'] >= 0 else ''}{f['shap_value']:.3f})"
             for f in top_features[:4]
         )
-        lines.append(f"Top model-identified drivers (SHAP contribution): {feat_str}")
+        lines.append(f"Top model-identified drivers (BiLSTM feature attribution): {feat_str}")
     if anomaly is not None:
         status = "FLAGGED AS ANOMALOUS" if anomaly.get("is_anomalous") else "within normal range"
         lines.append(f"Anomaly check: {status} (raw score {anomaly.get('anomaly_score', 0):.3f})")
@@ -72,13 +78,22 @@ def generate_narrative(
         facility_name, country, predicted_emission, baseline_emission, credits, top_features, anomaly
     )
     try:
+        headers = {"Content-Type": "application/json"}
+        if OLLAMA_API_KEY:
+            headers["Authorization"] = f"Bearer {OLLAMA_API_KEY}"
+
         resp = requests.post(
             OLLAMA_URL,
-            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
+            headers=headers,
+            json={
+                "model": OLLAMA_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+            },
             timeout=REQUEST_TIMEOUT_S,
         )
         resp.raise_for_status()
-        return resp.json().get("response", "").strip()
+        return resp.json().get("message", {}).get("content", "").strip()
     except requests.exceptions.RequestException as e:
         logger.warning(f"Ollama narrative generation unavailable: {e}")
         return None

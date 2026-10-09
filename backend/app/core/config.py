@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     model_path: str = "app/ai/best_bilstm.keras"
     scaler_path: str = "app/ai/scaler.pkl"
 
+    # Ollama narrative generation. An API key enables direct Ollama Cloud use;
+    # without one, the narrative service falls back to the local Ollama server.
+    ollama_api_key: str = ""
+    ollama_url: str = ""
+    ollama_model: str = ""
+    ollama_timeout_seconds: float = 60.0
+
     # Rate Limiting
     rate_limit: str = "100/minute"
 

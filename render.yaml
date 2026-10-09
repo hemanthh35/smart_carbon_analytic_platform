@@ -21,6 +21,10 @@ services:
         value: /var/data/logs
       - key: FRONTEND_DIST_DIR
         value: /app/frontend/dist
+      - key: OLLAMA_MODEL
+        value: gpt-oss:20b
+      - key: OLLAMA_TIMEOUT_SECONDS
+        value: "60"
       - key: ALLOWED_ORIGINS
         value: https://smart-carbon-analytics.onrender.com
       - key: PYTHONUNBUFFERED

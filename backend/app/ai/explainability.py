@@ -1,34 +1,20 @@
-"""Per-prediction explainability via a Random Forest surrogate model + SHAP.
+"""Per-prediction BiLSTM explainability with integrated-gradient attribution.
 
-The production BiLSTM is a recurrent network; SHAP's exact DeepExplainer support for
-Bidirectional LSTM stacks is unreliable across TensorFlow/Keras versions. Instead we
-train an interpretable Random Forest surrogate on the same 24-feature matrix the BiLSTM
-uses (see paper_experiments/baseline_comparison.py — the same surrogate scored
-R²=0.9992 under a random split, i.e. it approximates the learned input/output mapping
-closely) and explain ITS decisions with shap.TreeExplainer, which is exact and fast.
-This is a standard "surrogate model explainability" technique, not a literal
-decomposition of the BiLSTM's internal weights — documented here and in the paper so
-the distinction is never misrepresented.
+The attribution is computed directly from the loaded BiLSTM with TensorFlow's
+gradient tape. No secondary regression model is trained, so the explanation is
+attached to the same forecast that the API returns.
 """
 from __future__ import annotations
 
-import os
 from typing import Any
 
-import joblib
 import numpy as np
-import pandas as pd
-import shap
-from sklearn.ensemble import RandomForestRegressor
 
+from app.ai.inference import inference_engine
 from app.utils.constants import FEATURE_COLUMNS
 from app.utils.logger import get_logger
 
 logger = get_logger("ai.explainability")
-
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-_DATA_PATH = os.path.join(_ROOT, "preprocess", "iron_steel_preprocessed.csv")
-_CACHE_PATH = os.path.join(os.path.dirname(__file__), "surrogate_rf.pkl")
 
 
 class ExplainabilityService:
@@ -38,49 +24,61 @@ class ExplainabilityService:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._loaded = False
+            cls._instance._model = None
         return cls._instance
 
     def _ensure_loaded(self) -> None:
         if self._loaded:
             return
 
-        if os.path.exists(_CACHE_PATH):
-            logger.info(f"Loading cached surrogate RF from {_CACHE_PATH}")
-            self._model = joblib.load(_CACHE_PATH)
-        else:
-            if not os.path.exists(_DATA_PATH):
-                logger.warning("Preprocessed dataset not found; explainability disabled.")
-                self._model = None
-                self._explainer = None
-                self._loaded = True
-                return
-            logger.info("Training surrogate Random Forest for SHAP explainability...")
-            df = pd.read_csv(_DATA_PATH)
-            X = df[FEATURE_COLUMNS].values
-            y = df["emissions_quantity"].values
-            self._model = RandomForestRegressor(n_estimators=100, max_depth=15, random_state=42, n_jobs=-1)
-            self._model.fit(X, y)
-            joblib.dump(self._model, _CACHE_PATH)
-            logger.info(f"Surrogate RF trained and cached to {_CACHE_PATH}")
+        if not inference_engine.is_loaded:
+            logger.warning("BiLSTM is not loaded; explainability is unavailable.")
+            self._loaded = True
+            return
 
-        self._explainer = shap.TreeExplainer(self._model)
+        self._model = inference_engine._model
         self._loaded = True
+        logger.info("Direct BiLSTM integrated-gradient attribution is ready.")
 
     def explain(self, features: dict[str, Any], top_n: int = 6) -> list[dict[str, Any]] | None:
-        """Returns the top_n features (by |SHAP value|) driving this specific prediction,
-        signed so the caller can tell whether each pushed the prediction up or down."""
+        """Return the top features by signed integrated-gradient attribution.
+
+        The existing ``shap_value`` response key is retained for API compatibility
+        with the dashboard, but the values are direct BiLSTM attributions rather
+        than explanations from a secondary model.
+        """
         self._ensure_loaded()
         if self._model is None:
             return None
 
-        row = np.array([[float(features.get(col, 0.0)) for col in FEATURE_COLUMNS]])
-        shap_values = self._explainer.shap_values(row)[0]
+        import tensorflow as tf
+
+        row = np.array(
+            [[float(features.get(col, 0.0)) for col in FEATURE_COLUMNS]],
+            dtype=np.float32,
+        )
+        scaled = inference_engine._scaler.transform(row).astype(np.float32)
+        sample = scaled.reshape(1, len(FEATURE_COLUMNS), 1)
+        baseline = np.zeros_like(sample)
+        steps = 8
+        alpha = tf.linspace(0.0, 1.0, steps)[:, None, None, None]
+        inputs = baseline[None, ...] + alpha * (sample[None, ...] - baseline[None, ...])
+        inputs = tf.reshape(inputs, (steps, len(FEATURE_COLUMNS), 1))
+
+        with tf.GradientTape() as tape:
+            tape.watch(inputs)
+            predictions = self._model(inputs, training=False)
+        gradients = tape.gradient(predictions, inputs).numpy()
+        average_gradients = (gradients[:-1] + gradients[1:]).mean(axis=0) / 2.0
+        # Gradients have shape (steps, features, 1); after averaging over the
+        # integration steps, the result is (features, 1).
+        attributions = ((sample - baseline)[0, :, 0] * average_gradients[:, 0]).tolist()
 
         contributions = [
-            {"feature": col, "shap_value": float(val)}
-            for col, val in zip(FEATURE_COLUMNS, shap_values)
+            {"feature": col, "shap_value": float(value)}
+            for col, value in zip(FEATURE_COLUMNS, attributions)
         ]
-        contributions.sort(key=lambda c: abs(c["shap_value"]), reverse=True)
+        contributions.sort(key=lambda item: abs(item["shap_value"]), reverse=True)
         return contributions[:top_n]
 
     @property
